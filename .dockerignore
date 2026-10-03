@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv*/
+.git/
+.env
+.vscode/
+data/
+mlruns/
+models/
+notebooks/
+tests/
+*.docx
+*:Zone.Identifier

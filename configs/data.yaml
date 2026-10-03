@@ -1,0 +1,69 @@
+# Cấu hình dữ liệu huấn luyện (sinh từ scripts/prepare_mcocr.py; số liệu theo data/processed/mcocr_clean/report.json)
+dataset:
+  name: mcocr_clean
+  source: data/raw/mcocr
+  processed_dir: data/processed/mcocr_clean
+  manifest: all.jsonl            # mỗi dòng: image_path (tương đối data/), regions[bbox_norm 0-1000, kie_label], gt, split, group_id, sample_weight
+  seed: 42
+  split_seed: 224                # seed tốt nhất trong 500 lần thử (cân bằng tỷ lệ nhãn/chất lượng giữa split)
+
+split:
+  strategy: group_aware          # nhóm = merchant/template (fuzzy tên + địa chỉ) + biên lai trùng (dHash <= 3, cùng ngày-giờ-tổng)
+  target_ratio: {train: 0.77, val: 0.10, test_unseen: 0.13}
+  test_seen_fraction_of_big_groups: 0.06   # nhóm >= 40 ảnh: giữ 6% làm test_seen (đo mức học thuộc template)
+  actual_images: {train: 832, val: 113, test: 153, test_seen: 51, dropped_dup: 4}
+  rule: val/test không chứa ảnh trùng; không nhóm nào vắt qua train và val/test
+
+labels:
+  scheme: BIO
+  entity_types: [MERCHANT_NAME, MERCHANT_ADDRESS, DATETIME, TOTAL]   # 4 loại -> 9 nhãn BIO
+  keyword_regions: O             # vùng "Tổng tiền:", "Ngày:" (role=key) gán O ở giai đoạn 1
+  note: MC-OCR chỉ gán nhãn 4 trường; phần còn lại là O nhưng có chứa dòng hàng hoá chưa gán nhãn
+
+model_input:
+  bbox_scale: 1000               # bbox_norm (x0,y0,x1,y1) trong [0,1000]
+  image_size: 224                # LayoutXLM processor tự resize; giữ ảnh gốc <= 1366 cạnh dài
+  max_seq_len: 512
+  doc_stride: 128                # cắt cửa sổ trượt khi vượt 512 token
+  label_all_tokens: false        # chỉ gán nhãn cho sub-token đầu của mỗi từ
+
+training_defaults:               # điểm khởi đầu cho GPU 6 GB (M3)
+  precision: fp16
+  per_device_batch_size: 2
+  gradient_accumulation_steps: 8 # batch hiệu dụng 16
+  gradient_checkpointing: true
+  learning_rate: 3.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  epochs: 30
+  early_stopping: {metric: val_entity_f1, patience: 5}
+
+sampling:
+  weight_field: sample_weight    # ~1/sqrt(kích thước nhóm trong train), trung bình 1, chặn 3
+  low_quality_oversample: 2.0    # ảnh quality < 0.5: val/test có ~25-30% nhưng train chỉ ~10%
+
+augmentation:                    # CHỈ áp dụng cho train, sau khi đã chia split
+  rotation_deg: 7
+  perspective: 0.05
+  brightness: [0.75, 1.25]
+  contrast: [0.75, 1.25]
+  gaussian_blur: {p: 0.3, sigma: [0.3, 1.2]}
+  motion_blur: {p: 0.1, kernel: [3, 7]}
+  jpeg_quality: {p: 0.5, range: [40, 95]}
+  thermal_fade: {p: 0.2, gamma: [1.1, 1.8]}
+  shadow: {p: 0.2}
+  random_pad_crop: 0.05
+  low_quality_boost: 1.5         # nhân xác suất làm nhiễu với ảnh quality < 0.5
+  forbidden: [horizontal_flip, vertical_flip, rotate_90, hue_shift]   # chữ phải đọc được, bbox phải khớp
+
+recognition:                     # fine-tune VietOCR / benchmark OCR trên crop trường chính
+  charset_file: data/processed/mcocr_clean/charset.txt   # 180 ký tự
+  files: {train: recognition_train.tsv (4770), val: recognition_val.tsv (614), test: recognition_test.tsv (880), test_seen: recognition_test_seen.tsv (295)}
+  normalize_unicode: NFC
+
+orientation:                     # hai biến thể dữ liệu, cùng split/nhóm/gt (tạo bằng scripts/prepare_mcocr.py [--keep-orientation])
+  upright: data/processed/mcocr_clean        # 45 ảnh xoay 90 độ đã được xoay thẳng; mặc định cho KIE
+  original: data/processed/mcocr_clean_orig  # giữ nguyên hướng ảnh gốc (55 ảnh ngang); orientation_fix = phép xoay cần để thẳng
+  inference_plan: auto-orient (phân loại 0/90/180/270) trước OCR, KIE chỉ nhận ảnh thẳng
+  orientation_classifier_data: xoay ngẫu nhiên ảnh thẳng 0/90/180/270, nhãn = góc xoay (sinh miễn phí, cân bằng 4 lớp)
+  ablation: so KIE train trên upright với train trên original, đo trên test có ảnh xoay (M3)

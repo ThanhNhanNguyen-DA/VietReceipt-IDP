@@ -1,0 +1,28 @@
+# Môi trường dùng chung: API, validation, pipelines, Celery worker.
+# Cài thêm requirements-ocr.txt (.venv-ocr) hoặc requirements-kie.txt (.venv-kie) tuỳ worker.
+# Khoảng phiên bản (chưa pin cứng): pin lại bằng lockfile sau khi smoke test 10 documents (kế hoạch mục 12).
+
+# API
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+pydantic>=2.8,<3.0
+pydantic-settings>=2.4
+
+# Queue
+celery[redis]>=5.4,<6.0
+
+# Supabase (Storage + Postgres)
+supabase>=2.8
+psycopg[binary]>=3.2
+
+# Xử lý ảnh / dữ liệu
+numpy>=1.26
+pillow>=10.4
+opencv-python-headless>=4.10
+python-dateutil>=2.9
+PyYAML>=6.0
+python-dotenv>=1.0
+
+# Experiment tracking (client)
+mlflow-skinny>=2.16

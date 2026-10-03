@@ -1,0 +1,20 @@
+# .venv-kie / kie-worker (queue `kie`): PyTorch + Transformers + VietOCR.
+# KHÔNG cài chung với PaddlePaddle (xung đột CUDA) -> xem requirements-ocr.txt.
+-r requirements.txt
+
+# PyTorch: chọn bản CUDA khớp driver (RTX 3060 Laptop 6 GB), ví dụ:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu124
+torch>=2.4
+torchvision>=0.19
+
+# LayoutXLM / LiLT (token classification). LayoutXLM cần detectron2 cho phần visual:
+# timebox 1 ngày ở M3; nếu không cài được -> dùng LiLT + XLM-RoBERTa (không cần detectron2).
+transformers>=4.44
+datasets>=2.20
+accelerate>=0.33
+sentencepiece>=0.2
+seqeval>=1.2.2
+scikit-learn>=1.5
+
+# Text recognition tiếng Việt (cấu hình B ở M2: PaddleOCR det + VietOCR rec)
+vietocr>=0.3.13

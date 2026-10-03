@@ -1,0 +1,21 @@
+# ocr-worker: PaddlePaddle + PaddleOCR (queue `ocr`). Chưa build thử: xác nhận CUDA của wheel Paddle với driver trước.
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+# Index wheel GPU của Paddle; đổi cu126 cho khớp CUDA. Dùng ARG PADDLE_PKG=paddlepaddle để chạy CPU.
+ARG PADDLE_PKG=paddlepaddle-gpu
+ARG PADDLE_INDEX=https://www.paddlepaddle.org.cn/packages/stable/cu126/
+RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+
+COPY requirements.txt requirements-ocr.txt ./
+RUN pip install --no-cache-dir ${PADDLE_PKG} -i ${PADDLE_INDEX} \
+    && pip install --no-cache-dir -r requirements-ocr.txt
+
+COPY src ./src
+COPY configs ./configs
+
+# Giới hạn VRAM của Paddle để chừa chỗ cho kie-worker (GPU 6 GB)
+ENV FLAGS_fraction_of_gpu_memory_to_use=0.3
+CMD ["celery", "-A", "src.pipelines.celery_app", "worker", "-Q", "ocr", "-c", "1", "--loglevel=INFO", "-n", "ocr@%h"]

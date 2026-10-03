@@ -1,0 +1,9 @@
+# .venv-ocr / ocr-worker (queue `ocr`): PaddlePaddle + PaddleOCR.
+# KHÔNG cài chung với PyTorch (xung đột CUDA) -> xem requirements-kie.txt.
+-r requirements.txt
+
+# GPU: cài paddlepaddle-gpu từ index của Paddle, khớp phiên bản CUDA của driver, ví dụ:
+#   pip install paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/packages/stable/cu126/
+# CPU-only (dev nhanh):
+#   pip install paddlepaddle
+paddleocr>=3.0

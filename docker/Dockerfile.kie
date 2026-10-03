@@ -1,0 +1,19 @@
+# kie-worker: PyTorch + Transformers + VietOCR (queue `kie`). Chưa build thử.
+# detectron2 (LayoutXLM visual backbone) chưa có: xem timebox ở M3, fallback LiLT.
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+# Wheel torch có sẵn CUDA runtime; đổi cu124 cho khớp driver. CPU: ARG TORCH_INDEX=https://download.pytorch.org/whl/cpu
+ARG TORCH_INDEX=https://download.pytorch.org/whl/cu124
+RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+
+COPY requirements.txt requirements-kie.txt ./
+RUN pip install --no-cache-dir torch torchvision --index-url ${TORCH_INDEX} \
+    && pip install --no-cache-dir -r requirements-kie.txt --extra-index-url ${TORCH_INDEX}
+
+COPY src ./src
+COPY configs ./configs
+
+CMD ["celery", "-A", "src.pipelines.celery_app", "worker", "-Q", "kie", "-c", "1", "--loglevel=INFO", "-n", "kie@%h"]

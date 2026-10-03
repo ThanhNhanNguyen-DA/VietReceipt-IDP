@@ -1,0 +1,93 @@
+# Dev stack: API, 2 worker (OCR / KIE tách môi trường), Redis, MLflow. Supabase dùng managed cloud (cấu hình trong .env).
+# Chạy: docker compose up --build            (API + Redis + MLflow, không cần GPU)
+#       docker compose --profile gpu up --build   (thêm ocr-worker + kie-worker)
+
+x-app-env: &app-env
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    CELERY_BROKER_URL: redis://redis:6379/0
+    CELERY_RESULT_BACKEND: redis://redis:6379/1
+    REDIS_URL: redis://redis:6379/0
+    MLFLOW_TRACKING_URI: http://mlflow:5000
+
+x-gpu: &gpu
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: 1
+            capabilities: [gpu]
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.16.1
+    command: >
+      mlflow server --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    <<: *app-env
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ocr-worker:
+    profiles: [gpu]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ocr
+    <<: [*app-env, *gpu]
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A src.pipelines.celery_app inspect ping -d ocr@$$HOSTNAME"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  kie-worker:
+    profiles: [gpu]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.kie
+    <<: [*app-env, *gpu]
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A src.pipelines.celery_app inspect ping -d kie@$$HOSTNAME"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mlflow-data:

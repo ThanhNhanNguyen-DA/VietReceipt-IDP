@@ -1,0 +1,54 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.venv-*/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# --- Secrets / local config ---
+.env
+.env.*
+!.env.example
+.vscode/
+
+# --- Data (không commit ảnh/PDF/dữ liệu nhạy cảm; version bằng DVC) ---
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+data/annotations/**/*.jpg
+data/annotations/**/*.jpeg
+data/annotations/**/*.png
+data/annotations/**/*.pdf
+*.zip
+*:Zone.Identifier
+
+# --- Model weights / training artifacts ---
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+*.pdparams
+*.pdopt
+*.pdmodel
+*.pdiparams
+checkpoints/
+models/
+outputs/
+runs/
+mlruns/
+mlartifacts/
+
+# --- Supabase CLI ---
+supabase/.temp/
+supabase/.branches/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.idea/

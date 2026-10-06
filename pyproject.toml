@@ -1,0 +1,36 @@
+# Chỉ chứa cấu hình công cụ (chưa đóng gói thành package). Phụ thuộc: requirements*.txt.
+
+[tool.pytest.ini_options]
+pythonpath = ["."]            # import được `src.*` mà không cần __init__.py / cài package
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "slow: test chậm (tải model, chạy OCR thật)",
+    "gpu: cần GPU",
+    "integration: cần dịch vụ ngoài (Supabase, Redis, MLflow)",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 140             # code hiện có dùng dòng dài cho bảng/ví dụ; E501 tắt bên dưới
+extend-exclude = ["data", "notebooks", ".venv-ls", ".venv-ocr", ".venv-kie"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    "E501",    # độ dài dòng do formatter lo
+    "RUF001", "RUF002", "RUF003",   # chuỗi/comment tiếng Việt có ký tự Unicode "dễ nhầm"
+    "E701", "E702", "E731", "E741",  # văn phong gọn của scripts/ hiện có (một dòng `if x: y; continue`, lambda, biến l/w/h)
+    "RUF100", "RUF059",   # noqa dư và biến unpack không dùng trong scripts/ hiện có
+    "B905",    # zip() không strict: các chỗ dùng hiện có đã đảm bảo cùng độ dài
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src", "api"]
+
+[tool.coverage.run]
+source = ["src", "api"]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+skip_empty = true

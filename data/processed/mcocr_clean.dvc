@@ -1,0 +1,6 @@
+outs:
+- md5: 1f76ef840574428b23abc3b9dab544df.dir
+  size: 5508186
+  nfiles: 12
+  hash: md5
+  path: mcocr_clean

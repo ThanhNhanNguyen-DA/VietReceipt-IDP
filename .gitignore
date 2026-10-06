@@ -6,6 +6,8 @@ __pycache__/
 .venv-*/
 .pytest_cache/
 .ruff_cache/
+.coverage
+htmlcov/
 .mypy_cache/
 .ipynb_checkpoints/
 
@@ -19,7 +21,13 @@ __pycache__/
 data/raw/*
 data/processed/*
 !data/raw/.gitkeep
+!data/raw/*.dvc
+!data/raw/.gitignore
 !data/processed/.gitkeep
+!data/processed/*.dvc
+!data/processed/.gitignore
+data/annotations/label_studio_data/
+data/annotations/ls_tasks.json
 data/annotations/**/*.jpg
 data/annotations/**/*.jpeg
 data/annotations/**/*.png

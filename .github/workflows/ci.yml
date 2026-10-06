@@ -1,0 +1,22 @@
+name: ci
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      # Chỉ cài môi trường dùng chung: không kéo Paddle/PyTorch/Label Studio (CI không cần GPU hay dữ liệu)
+      - run: pip install -r requirements.txt pytest pytest-cov ruff
+      - run: ruff check .
+      - run: pytest --cov
+        env:
+          APP_ENV: test

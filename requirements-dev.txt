@@ -10,7 +10,6 @@ pre-commit>=3.8
 
 # Đánh giá
 jiwer>=3.0
-rapidfuzz>=3.9
 scipy>=1.13
 
 # MLOps / annotation

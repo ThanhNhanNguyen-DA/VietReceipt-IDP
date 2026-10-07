@@ -23,6 +23,7 @@ opencv-python-headless>=4.10
 python-dateutil>=2.9
 PyYAML>=6.0
 python-dotenv>=1.0
+rapidfuzz>=3.9  # OCR corpus CER/WER; also used by CPU-only tests in CI
 
 # Experiment tracking (client)
 mlflow-skinny>=2.16

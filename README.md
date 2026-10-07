@@ -28,3 +28,12 @@ Môi trường tách theo mục đích (Paddle và PyTorch xung đột CUDA): `.
 | `pyproject.toml` | pytest, ruff, coverage |
 
 Dữ liệu được version bằng DVC (`dvc pull`); ảnh và `.env` không bao giờ commit. Hướng dẫn gán nhãn: `docs/ANNOTATION_GUIDELINE.md`, nguồn dữ liệu: `docs/DATASETS.md`.
+
+## OCR baseline (M2)
+
+Runner `scripts/ocr_baseline.py` tạo crop dùng chung cho PaddleOCR/VietOCR, nhận dạng trong hai môi trường riêng và đánh giá E1/E2 trên vùng MC-OCR có nhãn.
+Cấu hình: `configs/ocr.yaml`. Lệnh chạy, phạm vi metric và đầu ra: [docs/OCR_BASELINE.md](docs/OCR_BASELINE.md).
+
+Đã benchmark A/B với ba variant tiền xử lý trên toàn bộ 113 ảnh validation.
+Kết quả tốt nhất hiện tại: VietOCR + `none`, E1 CER 12,42%, E2 CER 20,32%; chưa đạt mục tiêu CER 5%.
+Báo cáo chất lượng và bước tiếp theo: [docs/OCR_VALIDATION_RESULTS.md](docs/OCR_VALIDATION_RESULTS.md).

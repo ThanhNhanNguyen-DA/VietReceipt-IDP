@@ -17,4 +17,4 @@ seqeval>=1.2.2
 scikit-learn>=1.5
 
 # Text recognition tiếng Việt (cấu hình B ở M2: PaddleOCR det + VietOCR rec)
-vietocr>=0.3.13
+vietocr==0.3.12

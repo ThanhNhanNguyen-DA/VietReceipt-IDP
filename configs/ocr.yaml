@@ -1,0 +1,47 @@
+# Cấu hình OCR baseline (M2, kế hoạch mục 4.1/4.2). Chạy: xem docs/OCR_BASELINE.md
+# Cấu hình A: PaddleOCR det + rec | Cấu hình B: PaddleOCR det + VietOCR rec. Hai cấu hình dùng CHUNG box và CHUNG crop,
+# chỉ khác recognizer, nên chênh lệch CER/WER đến hoàn toàn từ recognizer.
+
+detection:                       # chạy trong .venv-ocr
+  model_name: PP-OCRv5_server_det
+  limit_side_len: 1920           # ảnh có cạnh dài > giá trị này bị thu nhỏ (MC-OCR cao tới 2860 px)
+  limit_type: max
+  thresh: 0.3
+  box_thresh: 0.6
+  unclip_ratio: 1.5
+  min_box_side: 6                # bỏ box có cạnh ngắn hơn (px, hệ toạ độ ảnh đã tiền xử lý)
+
+recognition:
+  paddle:                        # cấu hình A (.venv-ocr)
+    model_name: latin_PP-OCRv5_mobile_rec   # đã kiểm tra từ điển model có đ/ă/â/ê/ô/ơ/ư và chạy smoke test
+    batch_size: 16
+  vietocr:                       # cấu hình B (.venv-kie)
+    config_name: vgg_transformer
+    batch_size: 16
+    device: cuda:0
+
+crops:
+  vertical_ratio: 1.5            # crop cao/rộng >= giá trị này thì xoay 90 độ (giống PaddleOCR)
+  pad_px: 2
+
+preprocessing:                   # OpenCV rule-based (kế hoạch mục 4.2); mọi phép hình học gộp vào một homography để map box về ảnh gốc
+  variants:
+    none: {}
+    rules:
+      deskew: {max_angle: 12, min_angle: 0.5}
+      clahe: {clip_limit: 2.0, tile: 8}
+      denoise: {h: 5}
+    full:                        # thêm perspective; chỉ chấp nhận khi tìm được tứ giác đủ chắc chắn
+      perspective: {min_area_ratio: 0.35, max_area_ratio: 0.97}
+      deskew: {max_angle: 12, min_angle: 0.5}
+      clahe: {clip_limit: 2.0, tile: 8}
+      denoise: {h: 5}
+
+evaluation:
+  default_split: val             # test bị khoá đến khi chốt cấu hình (kế hoạch mục 3.1): chỉ dùng --split test cho lần báo cáo cuối
+  splits_with_manifest: [train, val, test, test_seen]
+  region_match:
+    min_overlap: 0.5             # dòng dự đoán gán cho vùng GT nếu >= 50% diện tích dòng nằm trong vùng
+    min_gt_side: 8               # bỏ vùng GT có cạnh < 8 px (nhãn lỗi, ví dụ hộp 4x1 px); khớp bộ lọc của prepare_mcocr
+  targets: {cer: 0.05, wer: 0.12}   # kế hoạch mục 7: sau chuẩn hoá NFC
+  fine_tune_trigger: "cả hai cấu hình CER > 5% -> fine-tune VietOCR trên text-line crops"

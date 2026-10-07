@@ -9,7 +9,8 @@ import pytest
 import yaml
 
 from src.ocr.backends import VietRecognizer, paddle_device_options, vietocr_image
-from src.ocr.baseline import prepare, read_jsonl, recognize
+from src.ocr.baseline import file_hash, fork, prepare, read_jsonl, recognize, write_json
+from src.ocr.geometry import apply_homography
 from src.ocr.report import evaluate, evaluation_rows
 from src.preprocessing.opencv_rules import estimate_skew, find_document_quad
 
@@ -220,3 +221,70 @@ def test_width_sorting_preserves_sample_to_prediction_correspondence(source):
     assert [p["sample_id"] for p in predictions] == [s["sample_id"] for s in bundle["samples"]]
     for sample, prediction in zip(bundle["samples"], predictions, strict=True):
         assert prediction["text"] == str(cv2.imread(str(work / sample["crop"])).shape[1])
+
+
+def test_rotated_pipeline_maps_detections_back_and_reads_multiline_region_upright(source):
+    cfg, manifest, root, work = source
+    row = json.loads(manifest.read_text())
+    row["regions"] = [{"bbox": [10, 10, 100, 65], "text": "first second", "label": "ADDRESS", "region_id": 0}]
+    manifest.write_text(json.dumps(row))
+    H = np.array([[-1., 0., 159.], [0., -1., 99.], [0., 0., 1.]])
+    polygons = [[[10, 50], [100, 50], [100, 70], [10, 70]], [[10, 10], [100, 10], [100, 30], [10, 30]]]
+
+    class RotatedDetector:
+        def detect(self, image):
+            assert np.array_equal(image, cv2.imread(str(root / "receipt.png"))[::-1, ::-1])
+            return [(apply_homography(p, H), 0.9) for p in polygons]
+
+    class RotatedRecognizer:
+        def recognize(self, images):
+            return [("first", 0.9), ("second", 0.9)]
+
+    decisions = root / "orientation.json"
+    write_json(decisions, {"format_version": 1, "split": "val", "source_preproc": "none", "manifest_sha256": file_hash(manifest),
+                           "pages": [{"image_id": row["image_id"], "image_path": row["image_path"], "width": 160, "height": 100,
+                                      "degrees": 180, "image_sha256": file_hash(root / "receipt.png")}]})
+    bundle = prepare(cfg, manifest, root, work, preproc="orient180", mode="e2", detector=RotatedDetector(), orientation_path=decisions)
+    for ln, polygon in zip(bundle["pages"][0]["lines"], polygons, strict=True):
+        assert np.allclose(ln["polygon"], polygon)
+    recognize(work, "paddle", recognizer=RotatedRecognizer(), batch_order="input")
+    report = evaluate(work, ["paddle"], n_resamples=10)
+    assert report["engines"]["paddle"]["e2"]["overall"]["cer_exact"]["value"] == 0
+    assert report["orientation"]["rotated_pages"] == [row["image_id"]]
+    # Source pixels are checked before the detector or a new run can be created.
+    (root / "receipt.png").write_bytes(b"changed")
+    with pytest.raises(ValueError, match="source image changed"):
+        prepare(cfg, manifest, root, root / "new", preproc="orient180", detector=RotatedDetector(), orientation_path=decisions)
+    assert not (root / "new").exists()
+
+
+def test_orientation_variant_requires_explicit_decisions(source):
+    cfg, manifest, root, work = source
+    with pytest.raises(ValueError, match="requires --orientation"):
+        prepare(cfg, manifest, root, work, preproc="orient180", mode="e1")
+    with pytest.raises(ValueError, match="requires --orientation"):
+        prepare(cfg, manifest, root, work, preproc="none", mode="e1", orientation_path=root / "missing.json")
+
+
+def test_fork_reuses_exact_crops_without_touching_baseline_results(source):
+    cfg, manifest, root, work = source
+    prepare(cfg, manifest, root, work, detector=Detector())
+    recognize(work, "vietocr", device="cpu", recognizer=Recognizer(), batch_order="input")
+    baseline_predictions = (work / "predictions_vietocr.jsonl").read_bytes()
+    weights = root / "best.pth"; weights.write_bytes(b"weights")
+    with pytest.raises(ValueError, match="requires weights"):
+        fork(work, root / "fork", "vietocr", {"config_file": str(cfg)})
+    with pytest.raises(ValueError, match="accepts"):
+        fork(work, root / "fork", "vietocr", {"model_dir": str(root)})
+    bundle = fork(work, root / "fork", "vietocr", {"weights": str(weights), "config_file": None})
+    original = json.loads((work / "dataset.json").read_text())
+    assert bundle["samples"] == original["samples"] and bundle["pages"] == original["pages"]
+    assert bundle["config"]["recognition"]["vietocr"]["weights"] == str(weights.resolve())
+    assert bundle["forked_from"]["artifact_sha256"] == {"weights": file_hash(weights)}
+    for sample in bundle["samples"]:
+        assert file_hash(root / "fork" / sample["crop"]) == sample["sha256"]
+    recognize(root / "fork", "vietocr", device="cpu", recognizer=Recognizer(), batch_order="input")
+    assert evaluate(root / "fork", ["vietocr"], n_resamples=10)["engines"]["vietocr"]["e1"]["overall"]["cer_exact"]["value"] == 0
+    assert (work / "predictions_vietocr.jsonl").read_bytes() == baseline_predictions
+    with pytest.raises(ValueError, match="new/empty"):
+        fork(work, root / "fork", "vietocr", {"weights": str(weights)})

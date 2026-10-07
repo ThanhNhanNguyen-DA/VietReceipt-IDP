@@ -78,6 +78,10 @@ Thời gian E2 trong `report.json` là ước lượng compute theo batch, khôn
 
 ## Quyết định cho bước tiếp theo
 
+Đã hoàn tất ablation đầu tiên cho hướng đọc 0°/180° trên 113 ảnh (2026-10-07):
+VietOCR `orient180` đạt E1 CER 12,24%, E2 CER 20,14%, nhưng lợi ích nhỏ và còn bỏ sót ảnh lộn.
+Giữ `none` làm mặc định. Phương pháp, CI và giới hạn: [OCR_ORIENTATION_RESULTS.md](OCR_ORIENTATION_RESULTS.md).
+
 Giữ **VietOCR + `none`** làm mốc so sánh cho vòng cải thiện tiếp theo, giữ Paddle làm đối chứng. Ưu tiên:
 
 1. Rà soát các lỗi GT/role và nhóm lỗi E2 ghép dư hoặc bỏ vùng; nếu sửa nhãn, version manifest mới và giữ báo cáo cũ để so sánh.

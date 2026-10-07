@@ -11,21 +11,11 @@ sys.path.insert(0, str(ROOT))
 
 from src.evaluation.bootstrap import paired_ratio_diff_ci  # noqa: E402
 from src.ocr.baseline import write_json  # noqa: E402
-from src.validation.normalize import parse_date, parse_time, parse_vnd  # noqa: E402
+from src.ocr.report import normalized_fields  # noqa: E402
 
 
 def percent(x):
     return f"{100 * x:.2f}%"
-
-
-def normalized_fields(rows):
-    result = {}
-    for label, name, parser in (("TOTAL_COST", "total_vnd", parse_vnd), ("TIMESTAMP", "date", parse_date), ("TIMESTAMP", "time", parse_time)):
-        pairs = [(parser(r["ref"]), parser(r["hyp"])) for r in rows if r["label"] == label and r["role"] == "value"]
-        pairs = [(a, b) for a, b in pairs if a is not None]
-        result[name] = {"valid_reference_regions": len(pairs), "matches": sum(a == b for a, b in pairs),
-                        "accuracy": sum(a == b for a, b in pairs) / len(pairs) if pairs else None}
-    return result
 
 
 def plot_cer(reports, out: Path):

@@ -1,6 +1,9 @@
 """Prepare shared lossless crops, then recognize them in separate environments."""
+import copy
 import hashlib
 import json
+import os
+import shutil
 from pathlib import Path
 from time import perf_counter
 
@@ -56,7 +59,7 @@ def valid_regions(record: dict, min_side: float) -> tuple[list[dict], int]:
 
 
 def prepare(config_path: Path, manifest: Path, data_root: Path, out: Path, split="val", preproc="none",
-            mode="both", limit=0, allow_test=False, device="gpu:0", detector=None) -> dict:
+            mode="both", limit=0, allow_test=False, device="gpu:0", detector=None, orientation_path: Path | None = None) -> dict:
     if split in ("test", "test_seen") and not allow_test:
         raise ValueError("Test is locked. Use --allow-test only for the final evaluation.")
     if limit < 0:
@@ -70,6 +73,19 @@ def prepare(config_path: Path, manifest: Path, data_root: Path, out: Path, split
         records = records[:limit]
     if not records:
         raise ValueError(f"No records in split {split}")
+    orientations = {}
+    if (preproc == "orient180") != (orientation_path is not None):
+        raise ValueError("orient180 requires --orientation; other variants must omit it")
+    if orientation_path is not None:
+        from src.ocr.orientation import load_orientation
+
+        orientations = load_orientation(orientation_path, manifest, split)
+        for record in records:
+            decision = orientations.get(record["image_id"])
+            if (decision is None or decision["image_path"] != record["image_path"]
+                    or (decision["width"], decision["height"]) != (record["width"], record["height"])
+                    or decision["image_sha256"] != file_hash(safe_path(data_root, record["image_path"]))):
+                raise ValueError(f"Orientation missing or source image changed: {record['image_id']}")
     if out.exists() and any(out.iterdir()):
         raise ValueError(f"Output must be a new/empty directory: {out}")
     if mode not in ("e1", "e2", "both"):
@@ -98,7 +114,10 @@ def prepare(config_path: Path, manifest: Path, data_root: Path, out: Path, split
         if image.shape[:2] != (record["height"], record["width"]):
             raise ValueError(f"Image dimensions do not match manifest: {record['image_id']}")
         t0 = perf_counter()
-        pre = preprocess(image, steps)
+        decision = orientations.get(record["image_id"])
+        pre = preprocess(image, steps, rotation_deg=decision["degrees"] if decision else 0)
+        if decision:
+            pre.meta.update(orientation={k: v for k, v in decision.items() if k != "probes"}, H=pre.H.tolist())
         pre_time = perf_counter() - t0
         regs, skipped = valid_regions(record, cfg["evaluation"]["region_match"]["min_gt_side"])
         page = {"image_id": record["image_id"], "group_id": record["group_id"], "quality": record["quality"],
@@ -130,8 +149,58 @@ def prepare(config_path: Path, manifest: Path, data_root: Path, out: Path, split
     bundle = {"format_version": 1, "split": split, "preproc": preproc, "mode": mode, "limit": limit,
               "config": cfg, "manifest_sha256": file_hash(manifest), "device_detection": device if mode != "e1" else None,
               "versions_prepare": package_versions(), "pages": pages, "samples": samples}
+    if orientation_path:
+        bundle["orientation_sha256"] = file_hash(orientation_path)
+        bundle["orientation"] = json.loads(orientation_path.read_text(encoding="utf-8"))
     write_json(out / "dataset.json", bundle)
     return bundle
+
+
+# Keys a fork may override; anything else would change crops or references, not just the recognizer.
+FORK_OVERRIDES = {"vietocr": ("config_file", "weights"), "paddle": ("model_dir",)}
+
+
+def _artifact_hash(path: Path) -> str:
+    if path.is_file():
+        return file_hash(path)
+    files = sorted(f for f in path.rglob("*") if f.is_file())
+    if not files:
+        raise ValueError(f"Model artifact is empty or missing: {path}")
+    return hashlib.sha256("".join(f"{f.relative_to(path)}:{file_hash(f)}\n" for f in files).encode()).hexdigest()
+
+
+def fork(work: Path, out: Path, engine: str, overrides: dict) -> dict:
+    """New run over the exact same crops/references with another recognizer checkpoint.
+
+    Crops are hard-linked (copied across filesystems) so baseline predictions in `work` are never overwritten.
+    """
+    overrides = {k: v for k, v in overrides.items() if v is not None}
+    if not overrides or set(overrides) - set(FORK_OVERRIDES[engine]):
+        raise ValueError(f"{engine} fork accepts {FORK_OVERRIDES[engine]}")
+    if engine == "vietocr" and "weights" not in overrides:
+        raise ValueError("VietOCR fork requires weights so the checkpoint itself is hashed")
+    if out.exists() and any(out.iterdir()):
+        raise ValueError(f"Output must be a new/empty directory: {out}")
+    source = work / "dataset.json"
+    bundle = json.loads(source.read_text(encoding="utf-8"))
+    for sample in bundle["samples"]:
+        if file_hash(safe_path(work, sample["crop"])) != sample["sha256"]:
+            raise ValueError(f"Shared crop changed: {sample['sample_id']}")
+    artifacts = {k: _artifact_hash(Path(v)) for k, v in overrides.items()}
+    out.mkdir(parents=True, exist_ok=True)
+    for sample in bundle["samples"]:
+        src, dst = safe_path(work, sample["crop"]), safe_path(out, sample["crop"])
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            os.link(src, dst)
+        except OSError:
+            shutil.copy2(src, dst)
+    forked = copy.deepcopy(bundle)
+    forked["config"]["recognition"][engine].update({k: str(Path(v).resolve()) for k, v in overrides.items()})
+    forked["forked_from"] = {"work": str(work), "dataset_sha256": file_hash(source), "engine": engine,
+                             "overrides": forked["config"]["recognition"][engine], "artifact_sha256": artifacts}
+    write_json(out / "dataset.json", forked)
+    return forked
 
 
 def recognize(work: Path, engine: str, device: str | None = None, recognizer=None, batch_order="width") -> list[dict]:

@@ -27,6 +27,7 @@ crops:
 preprocessing:                   # OpenCV rule-based (kế hoạch mục 4.2); mọi phép hình học gộp vào một homography để map box về ảnh gốc
   variants:
     none: {}
+    orient180: {}                # như none + quyết định hướng từ lệnh orientation; bắt buộc --orientation
     rules:
       deskew: {max_angle: 12, min_angle: 0.5}
       clahe: {clip_limit: 2.0, tile: 8}
@@ -36,6 +37,16 @@ preprocessing:                   # OpenCV rule-based (kế hoạch mục 4.2); m
       deskew: {max_angle: 12, min_angle: 0.5}
       clahe: {clip_limit: 2.0, tile: 8}
       denoise: {h: 5}
+
+orientation:                     # heuristic confidence trên crop E2; tuyệt đối không dùng GT để chọn hướng
+  max_lines: 12                  # lấy crop lớn nhất đủ điều kiện, không dùng nhãn/quality
+  min_lines: 5
+  min_crop_side: 12
+  min_aspect: 2.0
+  max_aspect: 25.0
+  min_margin: 0.05               # median(score_180 - score_0)
+  min_vote_fraction: 0.7
+  min_rotated_score: 0.8
 
 evaluation:
   default_split: val             # test bị khoá đến khi chốt cấu hình (kế hoạch mục 3.1): chỉ dùng --split test cho lần báo cáo cuối

@@ -83,6 +83,41 @@ và giá trị tiền/ngày/giờ sau chuẩn hóa (thêm `--plot` nếu môi tr
 
 Script kiểm tra các run đều thuộc validation và có cùng manifest/tập tham chiếu.
 
+## Ablation hướng đọc 180°
+
+Lệnh `orientation` dùng VietOCR trên tối đa 12 crop detection E2 lớn nhất đủ điều kiện mỗi ảnh,
+đọc cùng batch ở 0° và 180°. Không đọc text/box GT, nhãn, role hoặc quality để chọn hướng.
+Chỉ xoay khi có ít nhất 5 cặp confidence hợp lệ, median chênh lệch ≥ 0,05,
+ít nhất 70% dòng nghiêng về 180° và median confidence sau xoay ≥ 0,8.
+Đây là heuristic chưa calibration; trường hợp thiếu bằng chứng giữ nguyên ảnh.
+Ngưỡng trong `configs/ocr.yaml:orientation` phải cố định trước khi xem kết quả ablation.
+
+```bash
+.venv-kie/bin/python scripts/ocr_baseline.py orientation \
+  --work outputs/ocr/val-none --out outputs/ocr/orientation-val-v1.json
+.venv-ocr/bin/python scripts/ocr_baseline.py prepare \
+  --out outputs/ocr/val-orient180 --preproc orient180 \
+  --orientation outputs/ocr/orientation-val-v1.json
+.venv-ocr/bin/python scripts/ocr_baseline.py recognize --work outputs/ocr/val-orient180 --engine paddle
+.venv-kie/bin/python scripts/ocr_baseline.py recognize --work outputs/ocr/val-orient180 --engine vietocr
+.venv/bin/python scripts/ocr_baseline.py evaluate --work outputs/ocr/val-orient180
+.venv/bin/python scripts/summarize_ocr_validation.py \
+  --works outputs/ocr/val-none outputs/ocr/val-orient180 \
+  --out outputs/ocr/orientation-summary --plot
+```
+
+`orientation` chỉ nhận run `none` có E2 thuộc train/val và yêu cầu file output mới.
+File quyết định lưu các cặp dự đoán/confidence, ngưỡng, model config/device/versions,
+hash dataset nguồn, manifest, crop và ảnh gốc. `prepare` kiểm tra manifest/split,
+đủ quyết định cho tập ảnh cần chạy và hash ảnh trước khi nạp detector.
+Variant `orient180` bắt buộc file quyết định; các variant khác không nhận file này.
+Ảnh đã xoay được detect và crop lại; A/B vẫn dùng chung PNG.
+Homography ánh xạ box về ảnh gốc để ghép GT; ghép text theo thứ tự đọc trong ảnh đã sửa hướng.
+
+Thời gian probe và detection ban đầu là chi phí bổ sung, được lưu riêng trong file quyết định,
+**không nằm trong `e2_compute_s`**. Ablation này chưa đo latency toàn pipeline hoặc chất lượng
+classifier hướng trên tập có nhãn hướng. Test/test_seen vẫn chưa được mở cho vòng cải thiện này.
+
 ## Đầu ra
 
 | File | Nội dung |

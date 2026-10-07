@@ -37,3 +37,7 @@ Cấu hình: `configs/ocr.yaml`. Lệnh chạy, phạm vi metric và đầu ra: 
 Đã benchmark A/B với ba variant tiền xử lý trên toàn bộ 113 ảnh validation.
 Kết quả tốt nhất hiện tại: VietOCR + `none`, E1 CER 12,42%, E2 CER 20,32%; chưa đạt mục tiêu CER 5%.
 Báo cáo chất lượng và bước tiếp theo: [docs/OCR_VALIDATION_RESULTS.md](docs/OCR_VALIDATION_RESULTS.md).
+
+Đã thử thêm hướng đọc 0°/180° trên đủ validation: VietOCR E1 CER 12,24%, E2 CER 20,14%.
+Variant thử nghiệm còn bỏ sót ảnh lộn và chưa cải thiện accuracy giá trị nghiệp vụ; giữ `none` làm mặc định.
+Chi tiết và lệnh tái chạy: [docs/OCR_ORIENTATION_RESULTS.md](docs/OCR_ORIENTATION_RESULTS.md).

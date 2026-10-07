@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.ocr.baseline import prepare, recognize  # noqa: E402
+from src.ocr.baseline import fork, prepare, recognize  # noqa: E402
 
 
 def main():
@@ -18,11 +18,25 @@ def main():
     p.add_argument("--data-root", type=Path, default=ROOT / "data")
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--split", choices=["train", "val", "test", "test_seen"], default="val")
-    p.add_argument("--preproc", choices=["none", "rules", "full"], default="none")
+    p.add_argument("--preproc", choices=["none", "rules", "full", "orient180"], default="none")
+    p.add_argument("--orientation", dest="orientation_path", type=Path, help="Decisions JSON from orientation (required for orient180)")
     p.add_argument("--mode", choices=["e1", "e2", "both"], default="both")
     p.add_argument("--limit", type=int, default=0)
     p.add_argument("--allow-test", action="store_true")
     p.add_argument("--device", default="gpu:0", help="Paddle device: gpu:0 or cpu")
+    p = subs.add_parser("orientation", help="Probe 0/180 degrees on detected crops using VietOCR confidence only")
+    p.add_argument("--work", type=Path, required=True, help="Existing none E2/both train/val run")
+    p.add_argument("--data-root", type=Path, default=ROOT / "data")
+    p.add_argument("--out", type=Path, required=True)
+    p.add_argument("--config", type=Path, default=ROOT / "configs/ocr.yaml", help="Orientation voting rules")
+    p.add_argument("--device", default="cuda:0")
+    p = subs.add_parser("fork", help="Copy a prepared run's crops/references to a new run with another recognizer checkpoint")
+    p.add_argument("--work", type=Path, required=True, help="Prepared source run, e.g. outputs/ocr/val-none")
+    p.add_argument("--out", type=Path, required=True)
+    p.add_argument("--engine", choices=["paddle", "vietocr"], required=True)
+    p.add_argument("--weights", type=Path, help="VietOCR state dict, e.g. outputs/training/vietocr-v2/best.pth")
+    p.add_argument("--config-file", type=Path, help="VietOCR full config (optional; default vgg_transformer)")
+    p.add_argument("--model-dir", type=Path, help="Paddle exported inference model directory")
     p = subs.add_parser("recognize", help="Run one recognizer on the shared crops")
     p.add_argument("--work", type=Path, required=True)
     p.add_argument("--engine", choices=["paddle", "vietocr"], required=True)
@@ -41,6 +55,17 @@ def main():
         if command == "prepare":
             args["config_path"] = args.pop("config")
             prepare(**args)
+        elif command == "orientation":
+            import yaml
+
+            from src.ocr.orientation import probe_orientation
+
+            args["rules"] = yaml.safe_load(args.pop("config").read_text(encoding="utf-8"))["orientation"]
+            probe_orientation(**args)
+        elif command == "fork":
+            overrides = {"weights": args.pop("weights"), "config_file": args.pop("config_file"), "model_dir": args.pop("model_dir")}
+            bundle = fork(overrides=overrides, **args)
+            print(f"Forked {len(bundle['samples'])} crops -> {args['out']}; run recognize/evaluate with --engine(s) {args['engine']}")
         elif command == "recognize":
             recognize(**args)
         else:

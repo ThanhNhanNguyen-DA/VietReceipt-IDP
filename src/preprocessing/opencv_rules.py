@@ -82,11 +82,19 @@ def find_document_quad(img: np.ndarray, min_area_ratio: float, max_area_ratio: f
     return best / scale
 
 
-def preprocess(img: np.ndarray, steps: dict) -> Preprocessed:
-    """steps: khoá trong {perspective, deskew, clahe, denoise}, giá trị là tham số (xem configs/ocr.yaml). {} = giữ nguyên ảnh."""
+def preprocess(img: np.ndarray, steps: dict, rotation_deg: int = 0) -> Preprocessed:
+    """Xoay 0/180° trước các steps {perspective, deskew, clahe, denoise}; gộp mọi phép hình học vào H."""
     H = np.eye(3)
     meta: dict = {}
     out = img
+    if type(rotation_deg) is not int or rotation_deg not in (0, 180):
+        raise ValueError("rotation_deg must be 0 or 180")
+    if rotation_deg == 180:
+        h, w = out.shape[:2]
+        # cv2.rotate maps pixel centres exactly; avoid interpolation and off-by-one shifts.
+        H = np.array([[-1., 0., w - 1], [0., -1., h - 1], [0., 0., 1.]])
+        out = cv2.rotate(out, cv2.ROTATE_180)
+        meta["rotation_deg"] = 180
     if "perspective" in steps:
         p = steps["perspective"]
         quad = find_document_quad(out, p["min_area_ratio"], p["max_area_ratio"])

@@ -56,13 +56,16 @@ def overlap_ratio(line_poly: Polygon, rect_xywh: list[float]) -> float:
     return float(inter) / area
 
 
-def reading_order(lines: list[OcrLine], y_tol: float = 0.5) -> list[OcrLine]:
-    """Trên xuống dưới, trái sang phải; hai dòng cùng hàng nếu tâm y lệch < y_tol x chiều cao dòng trung vị."""
+def reading_order(lines: list[OcrLine], y_tol: float = 0.5, H: np.ndarray | None = None) -> list[OcrLine]:
+    """Trên xuống dưới, trái sang phải trong frame H (nếu có); giữ nguyên polygon đầu ra.
+
+    Hai dòng cùng hàng nếu tâm y lệch < y_tol x chiều cao dòng trung vị.
+    """
     if not lines:
         return []
     info = []
     for ln in lines:
-        p = np.asarray(ln.polygon, dtype=np.float32)
+        p = np.asarray(apply_homography(ln.polygon, H) if H is not None else ln.polygon, dtype=np.float32)
         info.append((ln, float(p[:, 1].mean()), float(p[:, 0].mean()), float(np.ptp(p[:, 1]))))
     tol = y_tol * max(float(np.median([i[3] for i in info])), 1.0)
     rows: list[list[tuple]] = []

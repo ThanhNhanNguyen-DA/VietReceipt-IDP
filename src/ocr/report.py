@@ -11,6 +11,7 @@ from src.ocr.baseline import file_hash, read_jsonl, write_json
 from src.ocr.geometry import assign_lines_to_regions, reading_order
 from src.ocr.metrics import VARIANTS, score_pair
 from src.ocr.types import OcrLine
+from src.validation.normalize import parse_date, parse_time, parse_vnd
 
 
 def evaluation_rows(bundle: dict, predictions: list[dict]) -> list[dict]:
@@ -33,12 +34,23 @@ def evaluation_rows(bundle: dict, predictions: list[dict]) -> list[dict]:
                     hyp = by_id[sample_id]["text"]
                     matched = 1
                 else:
-                    hyp = " ".join(ln.text for ln in reading_order(assigned[i]))
+                    transform = page.get("meta", {}).get("H")
+                    hyp = " ".join(ln.text for ln in reading_order(assigned[i], H=np.asarray(transform) if transform is not None else None))
                     matched = int(bool(assigned[i]))
                 rows.append({"image_id": page["image_id"], "group_id": page["group_id"], "quality": page["quality"],
                              "region_id": reg["region_id"], "mode": mode, "label": reg["label"], "role": reg.get("role"),
                              "ref": reg["text"], "hyp": hyp, "matched": matched, **score_pair(reg["text"], hyp)})
     return rows
+
+
+def normalized_fields(rows):
+    result = {}
+    for label, name, parser in (("TOTAL_COST", "total_vnd", parse_vnd), ("TIMESTAMP", "date", parse_date), ("TIMESTAMP", "time", parse_time)):
+        pairs = [(parser(r["ref"]), parser(r["hyp"])) for r in rows if r["label"] == label and r["role"] == "value"]
+        pairs = [(a, b) for a, b in pairs if a is not None]
+        result[name] = {"valid_reference_regions": len(pairs), "matches": sum(a == b for a, b in pairs),
+                        "accuracy": sum(a == b for a, b in pairs) / len(pairs) if pairs else None}
+    return result
 
 
 def aggregate(rows: list[dict], n_resamples: int, confidence: float, seed: int) -> dict:
@@ -98,7 +110,7 @@ def evaluate(work: Path, engines: list[str], n_resamples=1000, confidence=0.95, 
         if bundle["mode"] != "e1":
             times = [p["timing_s"]["preprocessing"] + p["timing_s"]["detection"] + e2_images[p["image_id"]] for p in bundle["pages"]]
             reports[engine]["e2_compute_s"] = {"mean": float(np.mean(times)), "p95": float(np.quantile(times, 0.95)),
-                                             "note": "Estimate using amortized batch recognition; not API/end-to-end wall latency."}
+                                             "note": "Estimate using amortized batch recognition; orientation probing excluded; not API/end-to-end wall latency."}
     paired = {}
     if len(engines) == 2:
         a, b = engines
@@ -114,6 +126,11 @@ def evaluate(work: Path, engines: list[str], n_resamples=1000, confidence=0.95, 
               "config": bundle["config"], "bootstrap": {"n_resamples": n_resamples, "confidence": confidence, "seed": seed},
               "scope": "MC-OCR annotated regions only. Unannotated text is excluded; no full-page detection precision/recall claim.",
               "skipped_regions": sum(p["skipped_regions"] for p in bundle["pages"]), "engines": reports, "paired": paired, "runs": runs}
+    if "orientation" in bundle:
+        report["orientation"] = {k: v for k, v in bundle["orientation"].items() if k != "pages"}
+        report["orientation"]["sha256"] = bundle["orientation_sha256"]
+        report["orientation"]["rotated_pages"] = [p["image_id"] for p in bundle["pages"]
+                                                  if p["meta"]["orientation"]["degrees"] == 180]
     write_json(work / "report.json", report)
     for engine, rows in all_rows.items():
         with (work / f"errors_{engine}.csv").open("w", encoding="utf-8", newline="") as f:

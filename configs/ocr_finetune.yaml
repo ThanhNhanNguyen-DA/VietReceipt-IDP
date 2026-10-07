@@ -1,0 +1,52 @@
+# Initial local comparison; same reviewed train/val crops, test remains locked.
+seed: 42
+epochs: 5
+data: data/processed/ocr_review_v1
+vietocr:
+  config_file: models/vietocr/vgg-transformer.yml
+  base_config_file: models/vietocr/base.yml
+  pretrained: models/vietocr/vgg_transformer.pth
+  device: cuda:0
+  batch_size: 4
+  gradient_accumulation: 4
+  learning_rate: 0.00001
+  weight_decay: 0.0001
+  patience: 2
+  label_smoothing: 0.1
+vietocr_v2:                      # vòng 2: --section vietocr_v2. Train 4.764 crop: 79% từ 2 group, 60% text lặp
+  config_file: models/vietocr/vgg-transformer.yml
+  base_config_file: models/vietocr/base.yml
+  pretrained: models/vietocr/vgg_transformer.pth
+  device: cuda:0
+  epochs: 15                     # 298 batch/epoch, accumulation 2 -> ~149 bước tối ưu/epoch, ~2.2k bước tổng
+  batch_size: 16
+  gradient_accumulation: 2       # batch hiệu dụng 32
+  amp: bf16                      # RTX 3060 hỗ trợ bf16; validation vẫn chạy fp32 như inference
+  learning_rate: 0.0001          # sweep đề xuất: 5e-5 / 1e-4 / 2e-4 bằng --learning-rate
+  schedule: {warmup_ratio: 0.05, min_lr_ratio: 0.05}
+  weight_decay: 0.0001
+  patience: 4
+  label_smoothing: 0.1
+  decoder_mask_prob: 0.05        # như masked_language_model của VietOCR: giảm học thuộc chuỗi lặp
+  sampling:
+    max_text_repeats: 2          # mỗi (group, text) tối đa 2 bản trong pool của epoch
+    group_alpha: 0.7             # P(group) ∝ n^0.7: group nhỏ ~5% -> ~32% mẫu, lặp ~3 lần/epoch
+    samples_per_epoch: 4764      # rút có hoàn lại; giữ độ dài epoch như vòng 1
+  augment:
+    prob: 0.8                    # xác suất augment một crop; mỗi phép dưới đây có xác suất riêng
+    pad: {prob: 0.5, max_ratio: 0.12}
+    rotate: {prob: 0.3, max_deg: 2.0}
+    downscale: {prob: 0.3, min_scale: 0.45}
+    blur: {prob: 0.3, max_sigma: 1.2}
+    contrast: {prob: 0.5, max_delta: 0.35, max_shift: 35}
+    noise: {prob: 0.3, max_sigma: 8}
+    jpeg: {prob: 0.3, min_quality: 30}
+paddle:
+  source: models/training/PaddleOCR
+  source_commit: b03f46425e8ff4442b268ce449e3eef758146cd4
+  pretrained: models/training/latin_PP-OCRv5_mobile_rec_pretrained.pdparams
+  pretrained_url: https://paddle-model-ecology.bj.bcebos.com/paddlex/official_pretrained_model/latin_PP-OCRv5_mobile_rec_pretrained.pdparams
+  batch_size: 16
+  learning_rate: 0.00005
+  max_text_length: 100
+  image_shape: [3, 48, 640]

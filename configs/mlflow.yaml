@@ -1,0 +1,9 @@
+# Tên experiment cố định (kế hoạch mục 12). Tạo bằng: python scripts/init_mlflow.py
+experiments:
+  ocr-baseline: "M2 - CER/WER: PaddleOCR vs PaddleOCR det + VietOCR rec, có/không preprocessing"
+  kie-layoutxlm: "M3 - KIE field F1 theo curriculum 3 giai đoạn, ablation synthetic"
+  line-items: "M4 - Row F1: PP-StructureV3 vs geometry vs hybrid"
+  vlm-competitor: "M7 - VLM structured JSON trên cùng test set và schema"
+  end-to-end: "M5-M7 - pipeline đầy đủ, calibration, routing, benchmark cuối"
+default_tags:
+  project: viet-receipt-ai

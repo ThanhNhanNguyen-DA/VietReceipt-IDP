@@ -1,0 +1,4 @@
+# Install into .venv-ocr after requirements-ocr.txt. PaddleOCR source pinned in configs/ocr_finetune.yaml.
+lmdb==3.0.0
+scikit-image==0.26.0
+albumentations==2.0.8

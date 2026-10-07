@@ -6,4 +6,4 @@
 #   pip install paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/packages/stable/cu126/
 # CPU-only (dev nhanh):
 #   pip install paddlepaddle
-paddleocr>=3.0
+paddleocr==3.7.0

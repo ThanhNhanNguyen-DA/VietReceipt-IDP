@@ -1,0 +1,269 @@
+{
+  "version": 1,
+  "source_manifest_sha256": "ddd630c9baa59798ecde31c10ff711652f7c6c7176b72e9aceb775f2af6a7cfd",
+  "scope": "Structural audit of 5,384 train/val crops; visual inspection of 48 worst-CER crops plus known 04 counter crop. Corrections use pixel evidence; remaining labels are source annotations.",
+  "corrections": [
+    {
+      "sample_id": "mcocr_public_145013qrpce_7",
+      "old_text": "04 04",
+      "new_text": "04",
+      "action": "correct_text",
+      "evidence": "Inspected original page, GT crop and supplied recognition crop: a single 04 appears next to TAI QUAY. This is a counter number, not receipt total.",
+      "kie_proposal": "Remove TOTAL_COST entity assignment; OCR crop remains valid with transcription 04. Do not rewrite source benchmark."
+    },
+    {
+      "sample_id": "mcocr_public_145014mdhan_2",
+      "action": "correct_text",
+      "old_text": "Ngày",
+      "new_text": "Ngày: 10/08/2020-18:22",
+      "evidence": "Manually inspected saved recognition crop and zoom: visible full transcription is Ngày: 10/08/2020-18:22. Source annotation is incomplete or mismatches visible text."
+    },
+    {
+      "sample_id": "mcocr_public_145014iueod_4",
+      "action": "correct_text",
+      "old_text": "211.820",
+      "new_text": "TỔNG TIỀN PHẢI T.TOÁN 211.820",
+      "evidence": "Manually inspected saved recognition crop and zoom: visible full transcription is TỔNG TIỀN PHẢI T.TOÁN 211.820. Source annotation is incomplete or mismatches visible text."
+    },
+    {
+      "sample_id": "mcocr_public_145014zcoyr_3",
+      "action": "correct_text",
+      "old_text": "150,000",
+      "new_text": "Tổng tiền: 150,000",
+      "evidence": "Manually inspected saved recognition crop and zoom: visible full transcription is Tổng tiền: 150,000. Source annotation is incomplete or mismatches visible text."
+    },
+    {
+      "sample_id": "mcocr_public_145014mgcfg_3",
+      "action": "correct_text",
+      "old_text": "Tổng tiền",
+      "new_text": "Tổng tiền: 226,000",
+      "evidence": "Manually inspected saved recognition crop and zoom: visible full transcription is Tổng tiền: 226,000. Source annotation is incomplete or mismatches visible text."
+    },
+    {
+      "sample_id": "mcocr_public_145013shcxo_5",
+      "action": "correct_text",
+      "old_text": "Nam",
+      "new_text": "NGÀY:",
+      "evidence": "Manually inspected saved recognition crop and zoom: visible full transcription is NGÀY:. Source annotation is incomplete or mismatches visible text."
+    },
+    {
+      "sample_id": "mcocr_public_145013puwmb_7",
+      "action": "correct_text",
+      "old_text": "600đ",
+      "new_text": "GIỜ:",
+      "evidence": "Manually inspected saved recognition crop and zoom: visible full transcription is GIỜ:. Source annotation is incomplete or mismatches visible text."
+    },
+    {
+      "sample_id": "mcocr_public_145013nsnnh_4",
+      "action": "correct_text",
+      "old_text": "Nam",
+      "new_text": "NGÀY:",
+      "evidence": "Manually inspected saved recognition crop and zoom: visible full transcription is NGÀY:. Source annotation is incomplete or mismatches visible text."
+    },
+    {
+      "sample_id": "mcocr_public_145014udqjt_3",
+      "action": "correct_text",
+      "old_text": "NAM",
+      "new_text": "NGÀY:",
+      "evidence": "Manually inspected saved recognition crop and zoom: visible full transcription is NGÀY:. Source annotation is incomplete or mismatches visible text."
+    },
+    {
+      "sample_id": "mcocr_public_145014skpym_7",
+      "action": "correct_text",
+      "old_text": "600đ",
+      "new_text": "GIỜ:",
+      "evidence": "Manually inspected saved recognition crop and zoom: visible full transcription is GIỜ:. Source annotation is incomplete or mismatches visible text."
+    },
+    {
+      "sample_id": "mcocr_public_145014sncle_3",
+      "action": "correct_text",
+      "old_text": "Total",
+      "new_text": "Total: 51,000",
+      "evidence": "Manually inspected saved recognition crop and zoom: visible full transcription is Total: 51,000. Source annotation is incomplete or mismatches visible text."
+    },
+    {
+      "sample_id": "mcocr_public_145014btewf_0",
+      "action": "correct_text",
+      "old_text": "Giảm",
+      "new_text": "Tiền trả",
+      "evidence": "Manually inspected saved recognition crop and zoom: visible full transcription is Tiền trả. Source annotation is incomplete or mismatches visible text."
+    },
+    {
+      "sample_id": "mcocr_public_145013bldqx_0",
+      "action": "correct_text",
+      "old_text": "000 66",
+      "new_text": "99.000",
+      "evidence": "Manually inspected saved recognition crop and zoom: visible full transcription is 99.000. Source annotation is incomplete or mismatches visible text."
+    },
+    {
+      "sample_id": "mcocr_public_145013zhiwi_0",
+      "action": "correct_text",
+      "old_text": "PHÚC TONG",
+      "new_text": "PHÚC LONG",
+      "evidence": "Manually inspected saved recognition crop and zoom: visible full transcription is PHÚC LONG. Source annotation is incomplete or mismatches visible text."
+    },
+    {
+      "sample_id": "mcocr_public_145014jakjq_3",
+      "action": "correct_text",
+      "old_text": "12/08/20124",
+      "new_text": "12/08/2020 13:01:24",
+      "evidence": "Manually inspected saved recognition crop and zoom: visible full transcription is 12/08/2020 13:01:24. Source annotation is incomplete or mismatches visible text."
+    },
+    {
+      "sample_id": "mcocr_public_145014maadf_1",
+      "action": "exclude",
+      "old_text": "VinMart",
+      "evidence": "Manual inspection of crop/zoom. Different blurred name in pixels than VinMart annotation."
+    },
+    {
+      "sample_id": "mcocr_public_145014hpkhf_3",
+      "action": "exclude",
+      "old_text": "m",
+      "evidence": "Manual inspection of crop/zoom. Tiny blurred key cannot support source m or a reliable replacement."
+    },
+    {
+      "sample_id": "mcocr_public_145013uqtmx_10",
+      "action": "exclude",
+      "old_text": "1",
+      "evidence": "Manual inspection of crop/zoom. Tiny ambiguous cropped glyph cannot support source 1 confidently."
+    },
+    {
+      "sample_id": "mcocr_public_145014wowmj_2",
+      "action": "exclude",
+      "old_text": "Tổ 7.",
+      "evidence": "Manual inspection of crop/zoom. Inverted blurred longer address; source transcription only covers Tổ 7."
+    },
+    {
+      "sample_id": "mcocr_public_145014elcju_1",
+      "action": "exclude",
+      "old_text": "Ma Pham Ngọc Thạch",
+      "evidence": "Manual inspection of crop/zoom. Three-line address with only first-line transcription."
+    },
+    {
+      "sample_id": "mcocr_public_145013kzjew_1",
+      "action": "exclude",
+      "old_text": "Mi Phạm Ngọc Thạch",
+      "evidence": "Manual inspection of crop/zoom. Three-line address with only first-line transcription."
+    },
+    {
+      "sample_id": "mcocr_public_145013cezfv_0",
+      "action": "exclude",
+      "old_text": "CHẾ",
+      "evidence": "Manual inspection of crop/zoom. Faded unreadable trailing word after CHẾ absent from reference."
+    },
+    {
+      "sample_id": "mcocr_public_145014zsdex_2",
+      "action": "exclude",
+      "old_text": "24.03.2019",
+      "evidence": "Manual inspection of crop/zoom. Multiple keys/date/arrival/departure times; reference covers date only."
+    },
+    {
+      "sample_id": "mcocr_public_145013lkpwc_0",
+      "action": "exclude",
+      "old_text": "Xuân",
+      "evidence": "Manual inspection of crop/zoom. Two-line Thanh Xuân logo; reference covers only Xuân."
+    },
+    {
+      "sample_id": "mcocr_public_145014aqeur_1",
+      "action": "exclude",
+      "old_text": "Xuân",
+      "evidence": "Manual inspection of crop/zoom. Two-line Thanh Xuân logo; reference covers only Xuân."
+    },
+    {
+      "sample_id": "mcocr_public_145014euhfv_3",
+      "action": "exclude",
+      "old_text": "39.000",
+      "evidence": "Manual inspection of crop/zoom. Upside-down faint number inconsistent with reference; exact middle digit ambiguous."
+    },
+    {
+      "sample_id": "mcocr_public_145014yiovk_0",
+      "action": "exclude",
+      "old_text": "Dự án đầu tư xây dựng khu nhà ở Hi Brand",
+      "evidence": "Manual inspection of crop/zoom. Three-line address/project description; only last line in reference."
+    },
+    {
+      "sample_id": "mcocr_public_145014wvxfq_0",
+      "action": "exclude",
+      "old_text": "ĐC: 23 Nguyễn Thị Định - Trung Hòa - Cầu Giấy - HN",
+      "evidence": "Manual inspection of crop/zoom. Crop is a whole sideways receipt; reference covers only merchant address."
+    },
+    {
+      "sample_id": "mcocr_public_145014tzbvy_1",
+      "action": "exclude",
+      "old_text": "CS1: 21-25 Tuệ Tĩnh - Hai Bà Trưng -Hà Nội",
+      "evidence": "Manual inspection of crop/zoom. Four address lines; only first line in reference."
+    },
+    {
+      "sample_id": "mcocr_public_145014sfktp_1",
+      "action": "exclude",
+      "old_text": "Quang Trung Q.9",
+      "evidence": "Manual inspection of crop/zoom. Blurred prefix before Quang Trung Q.9 is absent from reference and cannot be recovered confidently."
+    },
+    {
+      "sample_id": "mcocr_public_145014wowmj_5",
+      "action": "rotate",
+      "rotation_deg": 180,
+      "old_text": "64.200",
+      "evidence": "Manual inspection confirms upside-down crop; 180-degree rotation makes reference readable. Text unchanged."
+    },
+    {
+      "sample_id": "mcocr_public_145014urzox_3",
+      "action": "rotate",
+      "rotation_deg": 180,
+      "old_text": "529,000",
+      "evidence": "Manual inspection confirms upside-down crop; 180-degree rotation makes reference readable. Text unchanged."
+    },
+    {
+      "sample_id": "mcocr_public_145014rzbtj_6",
+      "action": "rotate",
+      "rotation_deg": 180,
+      "old_text": "Tổng",
+      "evidence": "Manual inspection confirms upside-down crop; 180-degree rotation makes reference readable. Text unchanged."
+    },
+    {
+      "sample_id": "mcocr_public_145014rzbtj_5",
+      "action": "rotate",
+      "rotation_deg": 180,
+      "old_text": "15-08-2020 18-27",
+      "evidence": "Manual inspection confirms upside-down crop; 180-degree rotation makes reference readable. Text unchanged."
+    },
+    {
+      "sample_id": "mcocr_public_145014rzbtj_7",
+      "action": "rotate",
+      "rotation_deg": 180,
+      "old_text": "505,000đ",
+      "evidence": "Manual inspection confirms upside-down crop; 180-degree rotation makes reference readable. Text unchanged."
+    },
+    {
+      "sample_id": "mcocr_public_145014euhfv_1",
+      "action": "rotate",
+      "rotation_deg": 180,
+      "old_text": "Cầu Giấy, TP. Hà Nội",
+      "evidence": "Manual inspection confirms upside-down crop; 180-degree rotation makes reference readable. Text unchanged."
+    },
+    {
+      "sample_id": "mcocr_public_145014jqtcw_0",
+      "action": "rotate",
+      "rotation_deg": 180,
+      "old_text": "Tiền trả",
+      "evidence": "Manual inspection confirms upside-down crop; 180-degree rotation makes reference readable. Text unchanged."
+    }
+  ],
+  "entity_proposals": [
+    {
+      "image_id": "mcocr_public_145013qrpce.jpg",
+      "source_index": 0,
+      "proposal": "role=key, kie_label=O for TÊN ĐẠI LÝ"
+    },
+    {
+      "image_id": "mcocr_public_145013qrpce.jpg",
+      "source_index": 2,
+      "proposal": "role=key, kie_label=O for Địa chỉ:"
+    },
+    {
+      "image_id": "mcocr_public_145013qrpce.jpg",
+      "source_index": 7,
+      "proposal": "Remove TOTAL_COST entity; 04 is counter number."
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+# Cài hook: pre-commit install   |   chạy tay: pre-commit run --all-files
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+        # code hiện có chưa format theo ruff; bật dần khi đã chạy `ruff format` một lượt
+        stages: [manual]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+        exclude: '\.(dvc|docx)$'
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: detect-private-key
+  - repo: local
+    hooks:
+      - id: no-data-or-env
+        name: không commit ảnh/dữ liệu/.env
+        language: fail
+        entry: Dữ liệu và .env không được commit (dùng DVC / .env.example).
+        files: '(^|/)\.env$|^data/(raw|processed)/.+\.(jpe?g|png|pdf|tsv|jsonl)$|\.(pt|pth|safetensors|pdparams)$'

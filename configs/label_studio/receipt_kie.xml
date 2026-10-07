@@ -1,0 +1,62 @@
+<View>
+  <!-- Nhãn theo kế hoạch mục 3.1 (12 nhãn) + 3 nhãn đề xuất thêm khớp schema: TAX_CODE, INVOICE_ID, SERVICE_CHARGE.
+       Quy ước chi tiết: docs/ANNOTATION_GUIDELINE.md -->
+  <Style>
+    .ls-main-content { gap: 12px; }
+    .doc-panel { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+  </Style>
+
+  <Image name="image" value="$image" zoom="true" zoomControl="true" rotateControl="true"/>
+
+  <Labels name="label" toName="image">
+    <Label value="MERCHANT_NAME"    background="#1f77b4" hotkey="1"/>
+    <Label value="MERCHANT_ADDRESS" background="#17becf" hotkey="2"/>
+    <Label value="TAX_CODE"         background="#7f7f7f" hotkey="3"/>
+    <Label value="INVOICE_ID"       background="#8c564b" hotkey="4"/>
+    <Label value="DATE"             background="#9467bd" hotkey="5"/>
+    <Label value="TIME"             background="#e377c2" hotkey="6"/>
+    <Label value="ITEM_NAME"        background="#2ca02c" hotkey="q"/>
+    <Label value="ITEM_QTY"         background="#98df8a" hotkey="w"/>
+    <Label value="ITEM_PRICE"       background="#bcbd22" hotkey="e"/>
+    <Label value="ITEM_AMOUNT"      background="#ff7f0e" hotkey="r"/>
+    <Label value="SUBTOTAL"         background="#aec7e8" hotkey="a"/>
+    <Label value="DISCOUNT"         background="#c49c94" hotkey="s"/>
+    <Label value="SERVICE_CHARGE"   background="#c5b0d5" hotkey="d"/>
+    <Label value="VAT"              background="#f7b6d2" hotkey="f"/>
+    <Label value="TOTAL"            background="#d62728" hotkey="t"/>
+  </Labels>
+  <Rectangle name="bbox" toName="image" strokeWidth="2"/>
+  <TextArea name="transcription" toName="image" perRegion="true" editable="true" rows="2"
+            maxSubmissions="1" placeholder="Văn bản đúng của vùng (sửa nếu OCR sai; giữ nguyên dấu tiếng Việt)"
+            displayMode="region-list"/>
+
+  <View className="doc-panel">
+    <Header value="Thuộc tính cả biên lai"/>
+    <Choices name="category" toName="image" choice="single" showInline="true" required="true">
+      <Choice value="supermarket" alias="supermarket"/>
+      <Choice value="convenience" alias="convenience"/>
+      <Choice value="fnb" alias="fnb"/>
+      <Choice value="ecommerce" alias="ecommerce"/>
+    </Choices>
+    <Choices name="payment_method" toName="image" choice="single" showInline="true">
+      <Choice value="cash"/><Choice value="card"/><Choice value="ewallet"/>
+      <Choice value="bank_transfer"/><Choice value="other"/>
+    </Choices>
+    <Choices name="price_includes_vat" toName="image" choice="single" showInline="true">
+      <Choice value="included" alias="true"/>
+      <Choice value="excluded" alias="false"/>
+      <Choice value="unknown" alias="null"/>
+    </Choices>
+    <Choices name="quality" toName="image" choice="single" showInline="true" required="true">
+      <Choice value="good"/><Choice value="medium"/><Choice value="poor"/>
+    </Choices>
+    <Choices name="flags" toName="image" choice="multiple" showInline="true">
+      <Choice value="pii_unmasked"/>
+      <Choice value="multi_page_or_cut"/>
+      <Choice value="rotated_or_skewed"/>
+      <Choice value="not_a_receipt"/>
+      <Choice value="uncertain"/>
+    </Choices>
+    <TextArea name="note" toName="image" rows="2" placeholder="Ghi chú (ca khó, nghi ngờ nhãn)"/>
+  </View>
+</View>

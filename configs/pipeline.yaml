@@ -1,0 +1,31 @@
+# Cấu hình runtime chung: queue, luật validation, ngưỡng routing, đánh giá. Nguồn: kế hoạch mục 5 (validation) và mục 3.1 (bootstrap).
+# Schema kiểm tra kiểu: src/config.py (PipelineConfig). Ngưỡng routing là điểm khởi đầu, được tune bằng risk-coverage ở M5.
+
+queues:                          # hai worker tách môi trường (Paddle và PyTorch xung đột CUDA)
+  ocr: ocr
+  kie: kie
+
+retry:
+  technical_failure_max: 1       # retry preprocessing/OCR tối đa 1 lần khi lỗi kỹ thuật; business rule fail -> review queue
+
+validation:
+  line_item:                     # |quantity * unit_price - amount| <= max(abs_tol_vnd, rel_tol * amount)
+    abs_tol_vnd: 100
+    rel_tol: 0.005
+  total:                         # sai số tổng <= max(abs_tol_vnd, rel_tol * total); chấp nhận MỘT trong hai công thức VAT
+    abs_tol_vnd: 500
+    rel_tol: 0.001
+  vat_formulas:
+    excluded: "total = sum(amount) - discount + vat (+ service_charge)"   # giá chưa gồm VAT
+    included: "total = sum(amount) - discount (+ service_charge)"         # giá đã gồm VAT
+  allow_future_date: false
+
+routing:
+  tau_high: 0.90                 # doc_conf >= tau_high VÀ validation pass -> auto_accept
+  tau_low: 0.75                  # tau_low <= doc_conf < tau_high -> accept_with_warning; < tau_low hoặc validation fail -> human_review
+  target_auto_accept_error: 0.02 # tune tau_high: tỷ lệ lỗi nhóm auto-accept <= 2%, coverage lớn nhất
+  required_fields: [merchant.name, transaction.date, items, total]   # doc_conf = min conf theo các field bắt buộc
+
+evaluation:
+  bootstrap: {n_resamples: 1000, confidence: 0.95, resample_by: merchant}   # CI 95%, lấy mẫu lại theo merchant
+  primary_test: test_unseen      # chỉ số chính trên unseen-template; test_seen báo cáo riêng

@@ -1,0 +1,5 @@
+[core]
+    remote = local
+    analytics = false
+['remote "local"']
+    url = /home/nhan1/dvc-storage/viet-receipt-ai

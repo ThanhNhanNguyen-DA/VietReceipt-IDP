@@ -1,0 +1,6 @@
+outs:
+- md5: e0164046483fc3c172f0395e11187b67.dir
+  size: 59830523
+  nfiles: 5374
+  hash: md5
+  path: ocr_review_v1

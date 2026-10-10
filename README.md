@@ -41,3 +41,9 @@ Báo cáo chất lượng và bước tiếp theo: [docs/OCR_VALIDATION_RESULTS.
 Đã thử thêm hướng đọc 0°/180° trên đủ validation: VietOCR E1 CER 12,24%, E2 CER 20,14%.
 Variant thử nghiệm còn bỏ sót ảnh lộn và chưa cải thiện accuracy giá trị nghiệp vụ; giữ `none` làm mặc định.
 Chi tiết và lệnh tái chạy: [docs/OCR_ORIENTATION_RESULTS.md](docs/OCR_ORIENTATION_RESULTS.md).
+
+## Luồng đầu tiên trên MC-OCR
+
+VietOCR là recognizer chính (detector Paddle). `make flow` chạy ảnh MC-OCR -> OCR -> trích trường bằng luật -> chuẩn hoá -> routing -> JSON và chấm theo GT.
+Trên validation: tổng tiền 78,7%, ngày 86,4%, giờ 61,5%; tên người bán và địa chỉ CER 31,6% và 33,9%.
+Luật và kết quả: [docs/RECEIPT_FLOW.md](docs/RECEIPT_FLOW.md).

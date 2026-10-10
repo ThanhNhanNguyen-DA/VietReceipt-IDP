@@ -3,7 +3,7 @@ PY ?= .venv/bin/python
 LS_PY ?= .venv-ls/bin/python
 
 .DEFAULT_GOAL := help
-.PHONY: help setup setup-ls hooks test cov lint fmt schema up up-gpu down mlflow-init ls ls-tasks dvc-push dvc-pull
+.PHONY: help setup setup-ls hooks test cov lint fmt schema up up-gpu down mlflow-init ls ls-tasks dvc-push dvc-pull flow
 
 help: ## Liệt kê lệnh
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -59,3 +59,6 @@ dvc-push: ## Đẩy dữ liệu đã version lên remote DVC
 
 dvc-pull: ## Kéo dữ liệu từ remote DVC
 	.venv/bin/dvc pull
+
+flow: ## Luồng MC-OCR đầu tiên trên val: make flow OUT=outputs/flow/val [LIMIT=10]
+	$(PY) scripts/run_receipt_flow.py run --split val --out $(or $(OUT),outputs/flow/val) $(if $(LIMIT),--limit $(LIMIT))

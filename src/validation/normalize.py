@@ -7,12 +7,14 @@ from decimal import ROUND_HALF_UP, Decimal
 _NUM = re.compile(r"\d[\d.,]*")
 _DATE = re.compile(r"(?<!\d)(\d{1,2})\s*[/\-.]\s*(\d{1,2})\s*[/\-.]\s*(\d{4}|\d{2})(?!\d)")
 _DATE_VN = re.compile(r"ng[àa]y\s*(\d{1,2})\s*th[áa]ng\s*(\d{1,2})\s*n[ăa]m\s*(\d{4})", re.I)
+_SPACE_GROUPED = re.compile(r"(?<![\d.,:/\-])(\d{1,3})((?:[ \u00a0]\d{3})+)(?![\d:/])")
 _TIME = re.compile(r"(?<!\d)([01]?\d|2[0-3])\s*[:h]\s*([0-5]\d)(?:\s*[:]\s*([0-5]\d))?(?!\d)")
 
 
 def parse_vnd(text: str) -> int | None:
     """'1.234.567' / '1,234,567đ' / '16,200.00' / '150K' / '100.000 Đ' -> số nguyên VND. None nếu không có số."""
     s = unicodedata.normalize("NFC", text or "")
+    s = _SPACE_GROUPED.sub(lambda m: m[1] + re.sub(r"\s", "", m[2]), s)  # '64 000' -> '64000'
     nums = _NUM.findall(s)
     if not nums:
         return None

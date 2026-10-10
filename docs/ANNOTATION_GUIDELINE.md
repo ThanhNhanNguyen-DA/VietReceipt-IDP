@@ -114,7 +114,7 @@ Bbox chuẩn hoá về thang 0–1000. Tập dữ liệu sau khi chốt được
 
 ## 9. Chạy công cụ
 
-Label Studio cài trong venv riêng (`.venv-ls`, xem `requirements-annotation.txt`).
+Label Studio cài trong venv riêng (`.venv-ls`) bằng `pip install label-studio==1.23.2`; cài thêm `label-studio-sdk>=1.0` để chạy script setup project.
 
 ```bash
 scripts/run_label_studio.sh                      # http://localhost:8080, lần đầu tạo tài khoản

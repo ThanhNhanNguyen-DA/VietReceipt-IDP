@@ -9,9 +9,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
-COPY requirements.txt requirements-kie.txt ./
+COPY requirements.txt ./
 RUN pip install --no-cache-dir torch torchvision --index-url ${TORCH_INDEX} \
-    && pip install --no-cache-dir -r requirements-kie.txt --extra-index-url ${TORCH_INDEX}
+    && pip install --no-cache-dir -r requirements.txt vietocr==0.3.12 \
+       'transformers>=4.44' 'datasets>=2.20' 'accelerate>=0.33' \
+       'sentencepiece>=0.2' 'seqeval>=1.2.2' 'scikit-learn>=1.5' \
+       --extra-index-url ${TORCH_INDEX}
 
 COPY src ./src
 COPY configs ./configs

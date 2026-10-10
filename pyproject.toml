@@ -1,4 +1,4 @@
-# Chỉ chứa cấu hình công cụ (chưa đóng gói thành package). Phụ thuộc: requirements*.txt.
+# Chỉ chứa cấu hình công cụ (chưa đóng gói thành package). Phụ thuộc: requirements.txt.
 
 [tool.pytest.ini_options]
 pythonpath = ["."]            # import được `src.*` mà không cần __init__.py / cài package

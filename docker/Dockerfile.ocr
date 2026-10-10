@@ -9,9 +9,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
-COPY requirements.txt requirements-ocr.txt ./
+COPY requirements.txt ./
 RUN pip install --no-cache-dir ${PADDLE_PKG} -i ${PADDLE_INDEX} \
-    && pip install --no-cache-dir -r requirements-ocr.txt
+    && pip install --no-cache-dir -r requirements.txt paddleocr==3.7.0
 
 COPY src ./src
 COPY configs ./configs

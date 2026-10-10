@@ -1,3 +1,0 @@
-# Label Studio chạy trong venv riêng (.venv-ls) để tránh xung đột dependency với môi trường chính.
-# python3.11 -m venv .venv-ls && .venv-ls/bin/pip install -r requirements-annotation.txt
-label-studio==1.23.2

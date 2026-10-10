@@ -10,8 +10,8 @@ Một luồng chạy trọn từ ảnh MC-OCR đến JSON đã chuẩn hoá, có
 ## Chạy
 
 ```bash
-make flow LIMIT=10 OUT=outputs/flow/val-smoke      # 10 ảnh val, ~40 giây
-make flow OUT=outputs/flow/val                     # toàn bộ val (113 ảnh)
+.venv/bin/python scripts/run_receipt_flow.py run --limit 10 --out outputs/flow/val-smoke  # 10 ảnh val
+.venv/bin/python scripts/run_receipt_flow.py run --out outputs/flow/val                   # toàn bộ val (113 ảnh)
 .venv/bin/python scripts/run_receipt_flow.py extract --work outputs/ocr/val-none   # chỉ trích trường trên run OCR có sẵn
 ```
 

@@ -60,3 +60,13 @@ supabase/.branches/
 .DS_Store
 Thumbs.db
 .idea/
+
+# --- Công cụ và tài liệu chỉ giữ ở máy, không theo dõi trên Git ---
+/.dvc/
+/.dvcignore
+/.github/workflows/
+/.editorconfig
+/.pre-commit-config.yaml
+/Makefile
+/ai_completed_plan.docx
+/requirements-*.txt

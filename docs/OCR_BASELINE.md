@@ -29,8 +29,9 @@ Báo cáo có CI 95% bằng bootstrap 1.000 lần theo `group_id` merchant/templ
 
 ## Môi trường
 
-Python 3.11. Cài PaddlePaddle GPU hoặc CPU phù hợp máy **trước** khi chạy; `requirements-ocr.txt` không tự chọn wheel Paddle.
-Cài `.venv-kie` với Torch phù hợp CUDA và `requirements-kie.txt`.
+Python 3.11. Cài PaddlePaddle GPU hoặc CPU phù hợp máy **trước** khi chạy.
+Cài `.venv-ocr` với `requirements.txt` và `paddleocr==3.7.0`; `.venv-kie` với `requirements.txt`, Torch/Torchvision phù hợp CUDA và `vietocr==0.3.12`.
+Lệnh cài từng môi trường nằm trong [README.md](../README.md).
 Hai phiên bản adapter đã đối chiếu: PaddleOCR 3.7.0 và VietOCR 0.3.12.
 Runner lưu phiên bản các thư viện thực tế vào mỗi run; các dependency còn lại chưa được khóa đầy đủ.
 

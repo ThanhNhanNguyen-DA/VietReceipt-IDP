@@ -56,8 +56,8 @@ def overlap_ratio(line_poly: Polygon, rect_xywh: list[float]) -> float:
     return float(inter) / area
 
 
-def reading_order(lines: list[OcrLine], y_tol: float = 0.5, H: np.ndarray | None = None) -> list[OcrLine]:
-    """Trên xuống dưới, trái sang phải trong frame H (nếu có); giữ nguyên polygon đầu ra.
+def reading_rows(lines: list[OcrLine], y_tol: float = 0.5, H: np.ndarray | None = None) -> list[list[OcrLine]]:
+    """Gom dòng thành các hàng (trên xuống dưới), mỗi hàng sắp trái sang phải trong frame H (nếu có); giữ nguyên polygon đầu ra.
 
     Hai dòng cùng hàng nếu tâm y lệch < y_tol x chiều cao dòng trung vị.
     """
@@ -74,7 +74,12 @@ def reading_order(lines: list[OcrLine], y_tol: float = 0.5, H: np.ndarray | None
             rows[-1].append(item)
         else:
             rows.append([item])
-    return [it[0] for row in rows for it in sorted(row, key=lambda i: i[2])]
+    return [[it[0] for it in sorted(row, key=lambda i: i[2])] for row in rows]
+
+
+def reading_order(lines: list[OcrLine], y_tol: float = 0.5, H: np.ndarray | None = None) -> list[OcrLine]:
+    """Trên xuống dưới, trái sang phải (xem reading_rows)."""
+    return [ln for row in reading_rows(lines, y_tol, H) for ln in row]
 
 
 def assign_lines_to_regions(lines: list[OcrLine], regions: list[dict], min_overlap: float = 0.5) -> dict[int, list[OcrLine]]:

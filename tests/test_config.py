@@ -7,7 +7,8 @@ from src.config import CONFIG_DIR, PipelineConfig, Settings, get_pipeline_config
 
 def test_pipeline_config_loads_and_matches_plan():
     c = get_pipeline_config()
-    assert (c.routing.tau_high, c.routing.tau_low) == (0.90, 0.75)
+    # tau và target lỗi là giá trị đã hiệu chỉnh (scripts/calibrate_confidence.py), không phải 0.90/0.75/0.02 khởi điểm của kế hoạch
+    assert (c.routing.tau_high, c.routing.tau_low, c.routing.target_auto_accept_error) == (0.60, 0.50, 0.15)
     assert c.validation.total.limit(1_000_000) == 1000      # max(500, 0.1% * 1M)
     assert c.validation.total.limit(100_000) == 500
     assert c.validation.line_item.limit(10_000) == 100      # max(100, 0.5% * 10k = 50)

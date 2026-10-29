@@ -7,8 +7,19 @@ from src.validation.normalize import parse_date, parse_time, parse_vnd
     ("1.234.567", 1234567), ("1,234,567đ", 1234567), ("16,200.00", 16200), ("150K", 150000),
     ("100.000 Đ", 100000), ("74,000", 74000), ("Tong so tien thanh toan: 36,490.00", 36490),
     ("20.900", 20900), ("1.234,50", 1235), ("475000", 475000), ("Tổng tiền:", None), ("", None),
+    ("64 000", 64000), ("39 600", 39600), ("CASH(VND) - 156 000", 156000), ("1 234 567", 1234567),
+    ("Tiền Thanh Toán: 554 000", 554000), ("153,000 153,000", 153000), ("14-08-2020 21:31", 31),
 ])
 def test_parse_vnd(text, expected):
+    assert parse_vnd(text) == expected
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("55, 000", 55000), ("55 ,000", 55000), ("55. 000", 55000), ("1, 234, 567", 1234567),
+    ("55,\u00a0000", 55000), ("5 116,000", 116000),
+    ("35 000.", 35000), ("1 234 567,", 1234567),
+])
+def test_a2_parse_vnd_separator_spacing(text, expected):
     assert parse_vnd(text) == expected
 
 
@@ -17,6 +28,14 @@ def test_parse_vnd(text, expected):
     ("Ngày 01 tháng 10 năm 2026", "2026-10-01"), ("31/02/2020", None), ("Thời gian: 15:16:02 - 14/08/2020", "2020-08-14"), ("THỜI GIAN", None),
 ])
 def test_parse_date(text, expected):
+    assert parse_date(text) == expected
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Ngày 18/03/10/2020", "2020-10-03"), ("02 - 14/08/2020", "2020-08-14"),
+    ("01-10-26", "2026-10-01"), ("18/03/10", "2010-03-18"),
+])
+def test_a7_prefer_complete_year_over_overlapping_short_date(text, expected):
     assert parse_date(text) == expected
 
 

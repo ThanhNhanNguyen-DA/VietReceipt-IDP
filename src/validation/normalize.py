@@ -5,15 +5,18 @@ from datetime import date, time
 from decimal import ROUND_HALF_UP, Decimal
 
 _NUM = re.compile(r"\d[\d.,]*")
-_DATE = re.compile(r"(?<!\d)(\d{1,2})\s*[/\-.]\s*(\d{1,2})\s*[/\-.]\s*(\d{4}|\d{2})(?!\d)")
+_DATE = re.compile(r"(?<!\d)(\d{1,2})\s*[/\-.]\s*(\d{1,2})\s*[/\-.]\s*(\d{4})(?!\d)")
+_DATE_SHORT = re.compile(r"(?<!\d)(\d{1,2})\s*[/\-.]\s*(\d{1,2})\s*[/\-.]\s*(\d{2})(?!\d|\s*[/\-.]\s*\d)")
 _DATE_VN = re.compile(r"ng[àa]y\s*(\d{1,2})\s*th[áa]ng\s*(\d{1,2})\s*n[ăa]m\s*(\d{4})", re.I)
-_SPACE_GROUPED = re.compile(r"(?<![\d.,:/\-])(\d{1,3})((?:[ \u00a0]\d{3})+)(?![\d:/])")
+_SEPARATOR_SPACE = re.compile(r"(?<=\d)[ \u00a0]*([.,])[ \u00a0]*(?=\d{3}(?!\d))")
+_SPACE_GROUPED = re.compile(r"(?<![\d.,:/\-])(\d{1,3})((?:[ \u00a0]+\d{3})+)(?![\d:/\-]|[.,][ \u00a0]*\d|[ \u00a0]+\d)")
 _TIME = re.compile(r"(?<!\d)([01]?\d|2[0-3])\s*[:h]\s*([0-5]\d)(?:\s*[:]\s*([0-5]\d))?(?!\d)")
 
 
 def parse_vnd(text: str) -> int | None:
     """'1.234.567' / '1,234,567đ' / '16,200.00' / '150K' / '100.000 Đ' -> số nguyên VND. None nếu không có số."""
     s = unicodedata.normalize("NFC", text or "")
+    s = _SEPARATOR_SPACE.sub(r"\1", s)  # chỉ gộp khoảng trắng quanh dấu phân cách trước nhóm đủ 3 chữ số
     s = _SPACE_GROUPED.sub(lambda m: m[1] + re.sub(r"\s", "", m[2]), s)  # '64 000' -> '64000'
     nums = _NUM.findall(s)
     if not nums:
@@ -35,7 +38,7 @@ def parse_vnd(text: str) -> int | None:
 def parse_date(text: str) -> str | None:
     """-> 'YYYY-MM-DD' (đọc ngày trước tháng). None nếu không parse được / ngày không hợp lệ."""
     s = text or ""
-    for rx in (_DATE_VN, _DATE):
+    for rx in (_DATE_VN, _DATE, _DATE_SHORT):
         pos = 0
         while m := rx.search(s, pos):  # quét chồng lấn: "02 - 14/08/2020" thử "02-14/08" rồi mới tới "14/08/2020"
             d, mo, y = int(m[1]), int(m[2]), int(m[3])

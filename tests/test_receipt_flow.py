@@ -30,8 +30,9 @@ GT_REGIONS = [{"label": "SELLER", "role": "value", "text": "SIEU THI BACH HOA TO
 
 
 @pytest.mark.parametrize("conf,issues,expected", [
-    (0.95, [], Routing.auto_accept), (0.80, [], Routing.accept_with_warning), (0.50, [], Routing.human_review),
-    (0.95, ["missing:total"], Routing.human_review),
+    (CFG.routing.tau_high, [], Routing.auto_accept), (CFG.routing.tau_high - 0.01, [], Routing.accept_with_warning),
+    (CFG.routing.tau_low, [], Routing.accept_with_warning), (CFG.routing.tau_low - 0.01, [], Routing.human_review),
+    (1.0, ["missing:total"], Routing.human_review),
 ])
 def test_route(conf, issues, expected):
     assert route(conf, issues, CFG) == expected
@@ -66,7 +67,7 @@ def test_score_page_matches_total_across_number_formats_and_flags_misses():
 def test_extract_run_and_evaluate_roundtrip(tmp_path):
     (tmp_path / "pages_vietocr.jsonl").write_text(json.dumps(page_dict(LINES)) + "\n", encoding="utf-8")
     (tmp_path / "dataset.json").write_text(json.dumps({"pages": [{"image_id": "a.jpg", "group_id": "g1", "regions": GT_REGIONS}]}), encoding="utf-8")
-    assert len(extract_run(tmp_path, today=TODAY)) == 1
+    assert len(extract_run(tmp_path, today=TODAY, calibrate=False)) == 1
     report = evaluate(tmp_path, n_resamples=50)
     assert report["documents"] == 1 and report["fields"]["total"]["accuracy"] == 1.0 and report["fields"]["time"]["n"] == 1
     assert (tmp_path / "flow_report_vietocr.json").exists()

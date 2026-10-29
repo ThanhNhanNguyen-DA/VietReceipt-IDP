@@ -47,6 +47,7 @@ def main():
     r.add_argument("--limit", type=int, default=0)
     e = subs.add_parser("extract", help="Trích trường + chấm điểm trên run OCR có sẵn")
     e.add_argument("--work", type=Path, required=True)
+    e.add_argument("--out", type=Path, help="Ghi kết quả vào thư mục khác, không sửa run OCR nguồn")
     for s in (r, e):
         s.add_argument("--n-resamples", type=int, default=1000)
     args = p.parse_args()
@@ -55,9 +56,10 @@ def main():
         limit = ["--limit", str(args.limit)] if args.limit else []
         sh(".venv-ocr", "prepare", "--out", str(work), "--split", args.split, "--mode", "e2", *limit)
         sh(".venv-kie", "recognize", "--work", str(work), "--engine", "vietocr")
-    extract_run(work)
-    summary(evaluate(work, n_resamples=args.n_resamples))
-    print(f"\nKết quả từng ảnh: {work}/extraction_vietocr.jsonl; báo cáo: {work}/flow_report_vietocr.json")
+    out = args.out or work
+    results = extract_run(work, out=out)
+    summary(evaluate(work, n_resamples=args.n_resamples, results=results, out=out))
+    print(f"\nKết quả từng ảnh: {out}/extraction_vietocr.jsonl; báo cáo: {out}/flow_report_vietocr.json")
 
 
 if __name__ == "__main__":
